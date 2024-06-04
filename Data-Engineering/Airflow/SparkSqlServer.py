@@ -20,7 +20,7 @@ default_args = {
 }
 
 dag = DAG(
-    "spark_pi",
+    "SQLServer_Ezmeral",
     default_args=default_args,
     schedule_interval=None,
     tags=["ezaf", "spark", "pi"],
