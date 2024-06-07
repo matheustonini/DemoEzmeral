@@ -67,8 +67,8 @@ def conectorServer():
     connection.close()
 
 conectorSql = conectorServer (
-    task_id="submit",
-    application_file="example_spark_pi.yaml",
+    task_id="conector",
+    application_file="SQLServer_Ezmeral.py",
     do_xcom_push=True,
     dag=dag,
     api_group="sparkoperator.hpe.com",
