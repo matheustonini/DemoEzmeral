@@ -1,4 +1,5 @@
 from airflow import DAG
+import pyodbc
 from airflow.models.param import Param
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
     SparkKubernetesOperator,
@@ -36,7 +37,36 @@ dag = DAG(
     access_control={"All": {"can_read", "can_edit", "can_delete"}},
 )
 
-submit = SparkKubernetesOperator(
+def conectorServer():
+    # Definir os parâmetros de conexão
+    server = '172.16.0.179:1401'
+    database = 'AdventureWorks2022'
+    username = 'SA'
+    password = '#Gf15533155708'
+    connection_string = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}'
+
+    # Conectar ao banco de dados
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    # Escrever a consulta SQL
+    query = "SELECT * FROM Sales.SalesOrderHeader"
+
+    # Executar a consulta
+    cursor.execute(query)
+
+    # Puxar os dados
+    rows = cursor.fetchall()
+
+    # Exibir os resultados
+    for row in rows:
+        print(row)
+
+    # Fechar a conexão
+    cursor.close()
+    connection.close()
+
+conectorSql = conectorServer (
     task_id="submit",
     application_file="example_spark_pi.yaml",
     do_xcom_push=True,
@@ -45,12 +75,4 @@ submit = SparkKubernetesOperator(
     enable_impersonation_from_ldap_user=True,
 )
 
-sensor = SparkKubernetesSensor(
-    task_id="monitor",
-    application_name="{{ task_instance.xcom_pull(task_ids='submit')['metadata']['name'] }}",
-    dag=dag,
-    api_group="sparkoperator.hpe.com",
-    attach_log=True,
-)
-
-submit >> sensor
+conectorServer 
