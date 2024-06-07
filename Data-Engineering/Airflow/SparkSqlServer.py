@@ -1,6 +1,7 @@
 from airflow import DAG
 import pyodbc
 from airflow.models.param import Param
+from airflow.operators.python_operator import PythonOperator
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
     SparkKubernetesOperator,
 )
@@ -66,13 +67,19 @@ def conectorServer():
     cursor.close()
     connection.close()
 
-conectorSql = conectorServer (
+# conectorSql = conectorServer (
+#     task_id="conector",
+#     application_file="SQLServer_Ezmeral.py",
+#     do_xcom_push=True,
+#     dag=dag,
+#     api_group="sparkoperator.hpe.com",
+#     enable_impersonation_from_ldap_user=True,
+# )
+
+conectorSql = PythonOperator(
     task_id="conector",
-    application_file="SQLServer_Ezmeral.py",
-    do_xcom_push=True,
+    python_callable=conectorServer,
     dag=dag,
-    api_group="sparkoperator.hpe.com",
-    enable_impersonation_from_ldap_user=True,
 )
 
 conectorServer 
