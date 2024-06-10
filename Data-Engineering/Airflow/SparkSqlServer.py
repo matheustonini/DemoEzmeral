@@ -40,10 +40,10 @@ dag = DAG(
 
 def conectorServer():
     # Definir os parâmetros de conexão
-    server = '172.16.0.179:1401'
-    database = 'AdventureWorks2022'
-    username = 'SA'
-    password = '#Gf15533155708'
+    server = '172.16.3.103:1433'
+    database = 'AdventureWorksDW2019'
+    username = 'sa'
+    password = 'r2d2c3po*'
     connection_string = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}'
 
     # Conectar ao banco de dados
