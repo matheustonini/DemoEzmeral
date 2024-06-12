@@ -8,6 +8,8 @@ from airflow.providers.cncf.kubernetes.sensors.spark_kubernetes import (
     SparkKubernetesSensor,
 )
 from airflow.utils.dates import days_ago
+import jaydebeapi
+import os
 
 default_args = {
     "owner": "airflow",
@@ -38,37 +40,43 @@ dag = DAG(
 )
 
 def conectorServer():
-    # Definir os parâmetros de conexão
-    server = '172.16.0.179:1401'
-    database = 'AdventureWorks2022'
-    username = 'SA'
-    password = '#Gf15533155708'
-    connection_string = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}'
 
-    # Conectar ao banco de dados
-    connection = pyodbc.connect(connection_string)
-    cursor = connection.cursor()
+# Definindo a variável de ambiente JAVA_HOME (se ainda não estiver configurada)
+os.environ['JAVA_HOME'] = 'C:\Program Files\Java\jdk-22'
+os.environ['PATH'] = os.environ['JAVA_HOME'] + '\\bin;' + os.environ['PATH']
 
-    # Escrever a consulta SQL
-    query = "SELECT * FROM Sales.SalesOrderHeader"
+# Caminho para o arquivo .jar do driver JDBC (use barras duplas ou uma string bruta para evitar a invalid escape sequence)
+driver_jar = r'C:\Program Files (x86)\sqljdbc_12.6\enu\jars\mssql-jdbc-12.6.2.jre8.jar'
+driver_class = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
 
-    # Executar a consulta
-    cursor.execute(query)
+# URL de conexão JDBC para o SQL Server
+jdbc_url = 'jdbc:sqlserver://172.16.0.179:1401;database=AdventureWorks2022;encrypt=false'
 
-    # Puxar os dados
-    rows = cursor.fetchall()
+# Credenciais de acesso ao banco de dados
+username = 'sa'
+password = '#Gf15533155708'
 
-    # Exibir os resultados
-    for row in rows:
-        print(row)
+# Conectando ao banco de dados
+conn = jaydebeapi.connect(driver_class, jdbc_url, [username, password], driver_jar)
 
-    # Fechar a conexão
-    cursor.close()
-    connection.close()
+# Criando um cursor para executar consultas
+cursor = conn.cursor()
+
+# Executando uma consulta SQL
+cursor.execute("SELECT * FROM sales.salesperson")
+
+# Obtendo os resultados da consulta
+results = cursor.fetchall()
+for row in results:
+    print(row)
+
+# Fechando o cursor e a conexão
+cursor.close()
+conn.close()
 
 conectorSql = conectorServer (
-    task_id="conector",
-    application_file="SQLServer_Ezmeral.py",
+    task_id="submit",
+    application_file="example_spark_pi.yaml",
     do_xcom_push=True,
     dag=dag,
     api_group="sparkoperator.hpe.com",
