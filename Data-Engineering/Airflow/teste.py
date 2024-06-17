@@ -21,6 +21,6 @@ dag = DAG(
 run_sql_query = MsSqlOperator(
     task_id='run_sql_query',
     mssql_conn_id='my_sqlserver_connection',  # Use o id da conexão configurada
-    sql='select * from dbo.spt_monitor;',  # Sua consulta SQL
+    sql='SELECT * FROM dbo.DimCustomer;',  # Sua consulta SQL
     dag=dag,
 )
