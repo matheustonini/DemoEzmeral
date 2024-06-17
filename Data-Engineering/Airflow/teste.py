@@ -1,56 +1,26 @@
 from airflow import DAG
-from airflow.models.param import Param
-from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
-    SparkKubernetesOperator,
-)
-from airflow.providers.cncf.kubernetes.sensors.spark_kubernetes import (
-    SparkKubernetesSensor,
-)
+from airflow.providers.microsoft.mssql.operators.mssql import MsSqlOperator
 from airflow.utils.dates import days_ago
 
+# Defina os argumentos padrão do DAG
 default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": days_ago(1),
-    "email": ["airflow@example.com"],
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "max_active_runs": 1,
-    "retries": 0,
+    'owner': 'airflow',
+    'start_date': days_ago(1),  # Ajuste conforme necessário
+    'retries': 1,
 }
 
+# Crie o DAG
 dag = DAG(
-    "spark_pi",
+    'sqlserver_query_dag',
     default_args=default_args,
-    schedule_interval=None,
-    tags=["ezaf", "spark", "pi"],
-    params={
-        "airgap_registry_url": Param(
-            "",
-            type=["null", "string"],
-            pattern=r"^$|^\S+/$",
-            description="Airgap registry url. Trailing slash in the end is required",
-        ),
-    },
-    render_template_as_native_obj=True,
-    access_control={"All": {"can_read", "can_edit", "can_delete"}},
+    description='Um exemplo de DAG para interagir com SQL Server',
+    schedule_interval=None,  # Ajuste conforme necessário
 )
 
-submit = SparkKubernetesOperator(
-    task_id="submit",
-    application_file="example_spark_pi.yaml",
-    do_xcom_push=True,
+# Defina a tarefa usando MsSqlOperator
+run_sql_query = MsSqlOperator(
+    task_id='run_sql_query',
+    mssql_conn_id='my_sqlserver_connection',  # Use o id da conexão configurada
+    sql='SELECT * FROM dbo.DimCustomer;',  # Sua consulta SQL
     dag=dag,
-    api_group="sparkoperator.hpe.com",
-    enable_impersonation_from_ldap_user=True,
 )
-
-sensor = SparkKubernetesSensor(
-    task_id="monitor",
-    application_name="{{ task_instance.xcom_pull(task_ids='submit')['metadata']['name'] }}",
-    dag=dag,
-    api_group="sparkoperator.hpe.com",
-    attach_log=True,
-)
-
-submit >> sensor
